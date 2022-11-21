@@ -15,6 +15,9 @@ class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY(EditAnywhere)		// 暴露给编辑器，在编辑器中选择该ProjectileClass类的父类——AASMagicProjectile
+	TSubclassOf<AActor> ProjectileClass;  // 定义一个类，而不是对象
 public:
 	// Sets default values for this character's properties
 	ASCharacter();
@@ -32,8 +35,13 @@ protected:
 	virtual void BeginPlay() override;
 
 	void MoveForward(float Value);
+
 	void MoveRight(float Value);
+
+	void Jump();
 	
+	void PrimaryAttack();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
