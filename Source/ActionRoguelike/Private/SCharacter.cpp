@@ -5,6 +5,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include <SInteractionComponent.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogASCharacter, Log, All);
 // Sets default values
@@ -20,6 +21,9 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
 	 
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
+
+	
 	// 下面两个设置时互斥的，一个为true另一个必须要false
 	GetCharacterMovement()->bOrientRotationToMovement = true; // 设置CharacterMovement(Inherited)的 Orient Rotation to Movement 设置为 true，即旋转角色朝向跟随Movement（移动），使用键盘控制方向时，人物就可以转向（朝向改变）了，转动到相应的前后左右
 	bUseControllerRotationYaw = false; // 角色朝向不跟随ControllerRotationYaw，即角色朝向不跟随鼠标转动(鼠标即控制着PlayerController)。表现为：镜头以人物为中心进行360°环绕，
@@ -53,6 +57,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// 动作映射，只会触发一次，需要重复按键或按鼠标触发
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
 
 }
 
@@ -94,6 +99,17 @@ void ASCharacter::Jump()
 
 void ASCharacter::PrimaryAttack()
 {
+	PlayAnimMontage(AttackAnim);
+
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+
+	// GetWorldTimerManager()().ClearTimer(TimerHandle_PrimaryAttack);  // 当角色死亡时，应该取消定时器（取消延迟攻击）
+
+}
+
+void ASCharacter::PrimaryAttack_TimeElapsed()
+{
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 
 	FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
@@ -101,7 +117,14 @@ void ASCharacter::PrimaryAttack()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
 
 }
+void ASCharacter::PrimaryInteract()
+{
+	if (InteractionComp)
+	{
+		InteractionComp->PrimaryInteract();
+	}
+}
+
