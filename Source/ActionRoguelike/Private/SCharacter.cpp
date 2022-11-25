@@ -59,6 +59,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
 	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
 
+	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ASCharacter::Dash);
+
 }
 
 void ASCharacter::MoveForward(float Value)
@@ -110,22 +112,30 @@ void ASCharacter::PrimaryAttack()
 
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
-	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	if (ensure(ProjectileClass))
+	{
+		FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 
-	FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
+		FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this; // 传入发起攻者本人，在蓝图中判断Projectile击中的是不是发起攻者本人（因为子弹从手部spawn，会立即碰撞到发起攻击者本人），从而忽略发起攻击者本人。
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Instigator = this; // 传入发起攻者本人，在蓝图中判断Projectile击中的是不是发起攻者本人（因为子弹从手部spawn，会立即碰撞到发起攻击者本人），从而忽略发起攻击者本人。
 
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
-
+		GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	}
 }
+
 void ASCharacter::PrimaryInteract()
 {
 	if (InteractionComp)
 	{
 		InteractionComp->PrimaryInteract();
 	}
+}
+
+void ASCharacter::Dash()
+{
+	
 }
 

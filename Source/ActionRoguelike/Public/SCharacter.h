@@ -19,7 +19,7 @@ class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 
 protected:
 
-	UPROPERTY(EditAnywhere)		// 暴露给编辑器，在编辑器中选择该ProjectileClass类的父类——AASMagicProjectile
+	UPROPERTY(EditAnywhere)		// 暴露给编辑器，在编辑器中选择ProjectileClass的实际类类型AASMagicProjectile
 	TSubclassOf<AActor> ProjectileClass;  // 定义一个类，而不是对象
 	
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -56,6 +56,9 @@ protected:
 	void PrimaryAttack_TimeElapsed();
 
 	void PrimaryInteract();
+	
+	void Dash();
+
 
 public:	
 	// Called every frame

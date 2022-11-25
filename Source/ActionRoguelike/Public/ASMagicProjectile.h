@@ -22,19 +22,14 @@ public:
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	USphereComponent* SphereComp;
+		USphereComponent* SphereComp;
 
 	UPROPERTY(VisibleAnywhere)
-	UProjectileMovementComponent* MovementComp;
+		UProjectileMovementComponent* MovementComp;
 
 	UPROPERTY(VisibleAnywhere)
-	UParticleSystemComponent* EffectComp;
+		UParticleSystemComponent* EffectComp;
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 };
