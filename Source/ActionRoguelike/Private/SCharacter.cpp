@@ -112,17 +112,9 @@ void ASCharacter::PrimaryAttack()
 
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
-	if (ensure(ProjectileClass))
+	if (ensure(MagicProjectileClass))
 	{
-		FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-
-		FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Instigator = this; // 传入发起攻者本人，在蓝图中判断Projectile击中的是不是发起攻者本人（因为子弹从手部spawn，会立即碰撞到发起攻击者本人），从而忽略发起攻击者本人。
-
-		GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+		SpawnProjectile(MagicProjectileClass);
 	}
 }
 
@@ -136,6 +128,30 @@ void ASCharacter::PrimaryInteract()
 
 void ASCharacter::Dash()
 {
-	
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::Dash_TimeElapsed, 0.2f);
 }
+
+void ASCharacter::Dash_TimeElapsed()
+{
+	if (ensure(DashProjectileClass))
+	{
+		SpawnProjectile(DashProjectileClass);
+	}
+}
+
+void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ProjectileClass)
+{
+	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+
+	FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this; // 传入发起攻者本人，在蓝图中判断Projectile击中的是不是发起攻者本人（因为子弹从手部spawn，会立即碰撞到发起攻击者本人），从而忽略发起攻击者本人。
+
+	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+}
+
 

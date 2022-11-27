@@ -20,7 +20,10 @@ class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 protected:
 
 	UPROPERTY(EditAnywhere)		// 暴露给编辑器，在编辑器中选择ProjectileClass的实际类类型AASMagicProjectile
-	TSubclassOf<AActor> ProjectileClass;  // 定义一个类，而不是对象
+	TSubclassOf<AActor> MagicProjectileClass;  // 定义一个类，而不是对象
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> DashProjectileClass;
 	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
@@ -59,6 +62,9 @@ protected:
 	
 	void Dash();
 
+	void Dash_TimeElapsed();
+
+	void SpawnProjectile(TSubclassOf<AActor> ProjectileClass);
 
 public:	
 	// Called every frame

@@ -20,7 +20,7 @@ void ASDushProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorldTimerManager().SetTimer(TimerHandle_DelayedDetonate, this, &ASDushProjectile::Explode, DetonateDelay);
+	//GetWorldTimerManager().SetTimer(TimerHandle_DelayedDetonate, this, &ASDushProjectile::Explode, DetonateDelay);
 
 }
 
