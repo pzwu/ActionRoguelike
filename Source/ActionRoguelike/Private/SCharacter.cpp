@@ -55,10 +55,10 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	// 动作映射，只会触发一次，需要重复按键或按鼠标触发
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
-	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
-
+	PlayerInputComponent->BindAction("BlackHoleAttack", IE_Pressed, this, &ASCharacter::BlackHoleAttack);
 	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ASCharacter::Dash);
 
 }
@@ -126,32 +126,75 @@ void ASCharacter::PrimaryInteract()
 	}
 }
 
+void ASCharacter::BlackHoleAttack()
+{
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_BlackHole, this, &ASCharacter::BlackHoleAttack_TimeElapsed, 0.2f);
+}
+
+void ASCharacter::BlackHoleAttack_TimeElapsed()
+{
+	SpawnProjectile(BlackHoleProjectileClass);
+}
+
 void ASCharacter::Dash()
 {
 	PlayAnimMontage(AttackAnim);
 
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::Dash_TimeElapsed, 0.2f);
+	GetWorldTimerManager().SetTimer(TimerHandle_Dash, this, &ASCharacter::Dash_TimeElapsed, 0.2f);
 }
 
 void ASCharacter::Dash_TimeElapsed()
 {
-	if (ensure(DashProjectileClass))
-	{
-		SpawnProjectile(DashProjectileClass);
-	}
+	SpawnProjectile(DashProjectileClass);
 }
 
-void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ProjectileClass)
+void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 {
+	// 使用球体进行扫描路径上的碰撞查询
+	FCollisionShape Shape;
+	Shape.SetSphere(20.0f);
+
+	// 碰撞查询时忽略玩家
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	// 碰撞查询的ObjectType
+	FCollisionObjectQueryParams ObjParams;
+	ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjParams.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	// 射线起点(镜头的位置)
+	FVector TraceStart = CameraComp->GetComponentLocation();
+
+	// 根据起点和视线方向，确定射线终点（也即Crosshair所在的位置）     (视线的远端，如果miss了，仍会稍微朝crosshair调整)
+	// 向量相减：TraceEnd - TraceStart = 从start朝向End的向量，即ControlRotation.Vector()，就是视线（摄像机）看过去的方向，5000单位是一个arbitrary(随意的)距离，Unreal中单位是cm，5000cm，即50米
+	FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 5000);
+
+	// 从起点到终点的碰撞查询
+	FHitResult Hit;
+	if (GetWorld()->SweepSingleByObjectType(Hit, TraceStart, TraceEnd, FQuat::Identity, ObjParams, Shape, Params))
+	{
+		// 如果有碰撞，将碰撞点作为结束点，如果无碰撞，则还是原视线的终点TraceEnd作为结束点
+		TraceEnd = Hit.ImpactPoint;
+	}
+	
+	//从手到TraceEnd的Rotation
+	// 确定子弹的Transform(子弹的Rotation 和 Location，Location为手部位置，Rotation为手部指向crosshair的方向)
+
 	FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	FRotator ProjRotatation = FRotationMatrix::MakeFromX(TraceEnd - HandLocation).Rotator();
+	// FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹，则子弹与Crosshair有偏差，因为Crosshair（TraceEnd），是从镜头位置，向镜头朝向的方向计算出来的
+	FTransform SpawnTM = FTransform(ProjRotatation, HandLocation/*手部位置*/);    //从手部位置，向ProjRotatation方向，即手部朝向Crosshair（TraceEnd）的方向，发射子弹，目标就是Crosshair（TraceEnd）
 
-	FTransform SpawnTM = FTransform(GetControlRotation()/*镜头朝向的方向*/, HandLocation/*手部位置*/);    //从手部位置，向镜头朝向的方向，发射子弹
-
+	// 生成子弹，携带FActorSpawnParameters参数，指定碰撞时是否生成或调整为位置，指定Instigator等。
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Instigator = this; // 传入发起攻者本人，在蓝图中判断Projectile击中的是不是发起攻者本人（因为子弹从手部spawn，会立即碰撞到发起攻击者本人），从而忽略发起攻击者本人。
 
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	GetWorld()->SpawnActor<AActor>(ClassToSpawn, SpawnTM, SpawnParams);
 }
 
 

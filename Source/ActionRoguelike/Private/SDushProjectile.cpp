@@ -20,7 +20,7 @@ void ASDushProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//GetWorldTimerManager().SetTimer(TimerHandle_DelayedDetonate, this, &ASDushProjectile::Explode, DetonateDelay);
+	GetWorldTimerManager().SetTimer(TimerHandle_DelayedDetonate, this, &ASDushProjectile::Explode, DetonateDelay);
 
 }
 
@@ -32,14 +32,14 @@ void ASDushProjectile::Explode_Implementation()
 	// 释放爆炸特效，使用静态函数传入粒子系统UParticleSystemd(ImpactVFX)
 	UGameplayStatics::SpawnEmitterAtLocation(this, ImpactVFX, GetActorLocation(), GetActorRotation());
 
-	// Actor 自身关闭碰撞
-	SetActorEnableCollision(false);
+	//粒子系统组件 关闭（粒子特效关闭）
+	EffectComp->DeactivateSystem();
 
 	// 运动组件 停止运动
 	MovementComp->StopMovementImmediately();
 
-	//粒子系统组件 关闭（粒子特效关闭）
-	EffectComp->DeactivateSystem();
+	// Actor 自身关闭碰撞
+	SetActorEnableCollision(false);
 
 	// 延迟0.2秒传送玩家
 	FTimerHandle TimerHandle_DelayedTeleport;
@@ -54,7 +54,6 @@ void ASDushProjectile::TeleportInstigator()
 	if (ensure(ActorToTeleport))
 	{
 		ActorToTeleport->TeleportTo(GetActorLocation(), ActorToTeleport->GetActorRotation(), false, false);
-		
 	}
 
 	Destroy();

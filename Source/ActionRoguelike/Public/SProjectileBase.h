@@ -17,7 +17,7 @@ class ACTIONROGUELIKE_API ASProjectileBase : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	ASProjectileBase();
+	//ASProjectileBase();
 
 protected:
 
@@ -37,20 +37,22 @@ protected:
 	// 实现碰撞爆炸，需要需要绑定碰撞事件，再在碰撞事件中调用爆炸接口
 
 	// 被绑定到事件上的函数
+	// 'virtual' so we can override this in child-classes
 	UFUNCTION()
-	void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	virtual void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 
-	// 爆炸接口，需要暴露给蓝图（有可能用到），BlueprintNativeEvent，表明在C++中实现该函数，并且需要加_Implementation后缀
+	// 爆炸接口，BlueprintCallable允许蓝图子类调用此爆炸接口，BlueprintNativeEvent，表明在C++中实现该函数，并且需要加_Implementation后缀
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void Explode();
 
-	void BeginPlay();
+	//void BeginPlay();
 
 	virtual void PostInitializeComponents() override;
 
 
 
 public:	
+	ASProjectileBase();
 
 };

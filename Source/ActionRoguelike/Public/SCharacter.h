@@ -19,16 +19,22 @@ class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 
 protected:
 
-	UPROPERTY(EditAnywhere)		// 暴露给编辑器，在编辑器中选择ProjectileClass的实际类类型AASMagicProjectile
+	UPROPERTY(EditAnywhere, Category = "Attack")		// 暴露给编辑器，在编辑器中选择ProjectileClass的实际类类型AASMagicProjectile
 	TSubclassOf<AActor> MagicProjectileClass;  // 定义一个类，而不是对象
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> DashProjectileClass;
 	
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> BlackHoleProjectileClass;
+	
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<AActor> DashProjectileClass;
+
+
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
 
 	FTimerHandle TimerHandle_PrimaryAttack;
+	FTimerHandle TimerHandle_BlackHole;
+	FTimerHandle TimerHandle_Dash;
 
 public:
 	// Sets default values for this character's properties
@@ -59,12 +65,16 @@ protected:
 	void PrimaryAttack_TimeElapsed();
 
 	void PrimaryInteract();
-	
+
+	void BlackHoleAttack();
+
+	void BlackHoleAttack_TimeElapsed();
+
 	void Dash();
 
 	void Dash_TimeElapsed();
 
-	void SpawnProjectile(TSubclassOf<AActor> ProjectileClass);
+	void SpawnProjectile(TSubclassOf<AActor> ClassToSpawn);
 
 public:	
 	// Called every frame

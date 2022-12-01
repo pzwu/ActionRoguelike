@@ -14,12 +14,21 @@ class ACTIONROGUELIKE_API ASDushProjectile : public ASProjectileBase
 {
 	GENERATED_BODY()
 	
-
-	public:
-		ASDushProjectile();
-
 	protected:
-		void BeginPlay();
+
+		UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+		float TeleportDelay;
+
+		UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+		float DetonateDelay;
+
+		FTimerHandle TimerHandle_DelayedDetonate;
+
+		virtual void Explode_Implementation() override;
+
+		void TeleportInstigator();
+
+		virtual void BeginPlay() override;
 
 		/* 功能说明：
 		*	发射(BeginPlay)后，延迟0.2秒引爆DetonateDelay
@@ -28,13 +37,9 @@ class ACTIONROGUELIKE_API ASDushProjectile : public ASProjectileBase
 		*	引爆时，延迟0.2秒，把自己传送过去Impact point
 		*/ 
 
-		virtual void Explode_Implementation() override;
-		void TeleportInstigator();
 
+public:
 
-		float DetonateDelay;
-		float TeleportDelay;
-
-		FTimerHandle TimerHandle_DelayedDetonate;
+	ASDushProjectile();
 
 };
